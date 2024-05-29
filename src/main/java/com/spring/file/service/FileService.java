@@ -3,6 +3,7 @@ package com.spring.file.service;
 import com.spring.file.model.FileDto;
 import com.spring.file.model.FileSaveTempRequestDto;
 import com.spring.file.model.FileSaveTempResponseDto;
+import com.spring.file.properties.FileProperties;
 import java.io.File;
 import java.io.IOException;
 import java.time.LocalDate;
@@ -11,20 +12,22 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.StringJoiner;
 import java.util.UUID;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FilenameUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 @Slf4j
+@RequiredArgsConstructor
 @Service
 public class FileService {
 
-  String saveTempPath = "C:\\egoksg\\workspace\\spring-file\\temp";
+  private final FileProperties fileProperties;
 
   public FileSaveTempResponseDto saveTemp(FileSaveTempRequestDto dto) throws IOException {
     List<FileDto> fileDtoList = new ArrayList<>();
-    String uploadPath = makeFolder(saveTempPath, dto.getServiceName());
+    String uploadPath = makeFolder(fileProperties.getSaveTempPath(), dto.getServiceName());
 
     for (MultipartFile multipartFile : dto.getFiles()) {
       File file = makeFile(uploadPath, multipartFile);
