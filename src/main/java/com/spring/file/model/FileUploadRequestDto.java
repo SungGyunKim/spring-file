@@ -16,7 +16,7 @@ import org.springframework.web.multipart.MultipartFile;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class FileSaveTempRequestDto {
+public class FileUploadRequestDto {
 
   @Size(min = 1)
   @NotBlank

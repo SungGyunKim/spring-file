@@ -1,8 +1,8 @@
 package com.spring.file.service;
 
 import com.spring.file.model.FileDto;
-import com.spring.file.model.FileSaveTempRequestDto;
-import com.spring.file.model.FileSaveTempResponseDto;
+import com.spring.file.model.FileUploadRequestDto;
+import com.spring.file.model.FileUploadResponseDto;
 import com.spring.file.properties.FileProperties;
 import java.io.File;
 import java.io.IOException;
@@ -25,9 +25,9 @@ public class FileService {
 
   private final FileProperties fileProperties;
 
-  public FileSaveTempResponseDto saveTemp(FileSaveTempRequestDto dto) throws IOException {
+  public FileUploadResponseDto upload(FileUploadRequestDto dto) throws IOException {
+    String uploadPath = makeCurrentDateFolder(fileProperties.getTempPath(), dto.getServiceName());
     List<FileDto> fileDtoList = new ArrayList<>();
-    String uploadPath = makeFolder(fileProperties.getSaveTempPath(), dto.getServiceName());
 
     for (MultipartFile multipartFile : dto.getFiles()) {
       File file = makeFile(uploadPath, multipartFile);
@@ -40,10 +40,10 @@ public class FileService {
       fileDtoList.add(fileDto);
     }
 
-    return FileSaveTempResponseDto.builder().files(fileDtoList).build();
+    return FileUploadResponseDto.builder().files(fileDtoList).build();
   }
 
-  private String makeFolder(String basePath, String serviceName) {
+  private String makeCurrentDateFolder(String basePath, String serviceName) {
     final String DELIMITER = "/";
     String date = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy/MM/dd"));
     StringJoiner pathJoiner = new StringJoiner(DELIMITER);

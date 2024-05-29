@@ -1,7 +1,7 @@
 package com.spring.file.web;
 
-import com.spring.file.model.FileSaveTempRequestDto;
-import com.spring.file.model.FileSaveTempResponseDto;
+import com.spring.file.model.FileUploadRequestDto;
+import com.spring.file.model.FileUploadResponseDto;
 import com.spring.file.service.FileService;
 import java.io.IOException;
 import lombok.RequiredArgsConstructor;
@@ -17,10 +17,10 @@ public class FileController {
 
   private final FileService fileService;
 
-  @PostMapping("/save-temp")
-  public ResponseEntity<FileSaveTempResponseDto> saveTemp(FileSaveTempRequestDto dto)
+  @PostMapping("/upload")
+  public ResponseEntity<FileUploadResponseDto> upload(FileUploadRequestDto dto)
       throws IOException {
-    return ResponseEntity.ok(fileService.saveTemp(dto));
+    return ResponseEntity.ok(fileService.upload(dto));
   }
 
 }
