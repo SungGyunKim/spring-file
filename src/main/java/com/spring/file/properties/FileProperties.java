@@ -24,13 +24,22 @@ public class FileProperties {
   @NotBlank
   private final String tempFolder;
 
-  public FileProperties(String basePath, String tempFolder) {
+  @Size(min = 1)
+  @NotBlank
+  private final String saveFolder;
+
+  public FileProperties(String basePath, String tempFolder, String saveFolder) {
     this.basePath = DefaultUtils.getValue(basePath, Paths.get("file").toAbsolutePath().toString());
     this.tempFolder = DefaultUtils.getValue(tempFolder, "temp");
+    this.saveFolder = DefaultUtils.getValue(saveFolder, "save");
   }
 
   public String getTempPath() {
     return basePath + File.separator + tempFolder;
+  }
+
+  public String getSavePath() {
+    return basePath + File.separator + saveFolder;
   }
 
 }

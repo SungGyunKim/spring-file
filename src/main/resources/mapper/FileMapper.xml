@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.spring.file.mapper.FileMapper">
+<insert id="insertBulk" parameterType="com.spring.file.model.FileInsertBulkDto">
+  INSERT INTO TB_FILE (
+    FILE_ID
+    , FILE_PATH
+    , FILE_NM
+    , FILE_XTNS
+    , FILE_SIZE
+    , SVC_CD
+    , TBL_NM
+    , DSTN_CLMN_VAL
+  ) VALUES
+  <foreach collection="files" item="file" separator=",">
+  (
+    #{file.fileId}
+    , #{file.filePath}
+    , #{file.fileName}
+    , #{file.fileExtension}
+    , #{file.fileSize}
+    , #{file.serviceCode}
+    , #{file.tableName}
+    , #{file.distinguishColumnValue}
+  )
+  </foreach>
+</insert>
+</mapper>

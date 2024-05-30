@@ -1,3 +1,15 @@
+server:
+  port: 9000
 spring:
   application:
     name: spring-file
+  datasource:
+    driver-class-name: org.mariadb.jdbc.Driver
+    url: jdbc:mariadb://localhost:3306/FILE
+    username: root
+    password: root
+  sql:
+    init:
+      mode: always
+mybatis:
+  mapper-locations: classpath:mapper/*.xml

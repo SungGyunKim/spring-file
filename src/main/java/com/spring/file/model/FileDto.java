@@ -1,18 +1,44 @@
 package com.spring.file.model;
 
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.Builder;
-import lombok.Data;
+import org.hibernate.validator.constraints.UUID;
 
 @Builder
-@Data
 public class FileDto {
 
-  String id;
+  @UUID
+  @Size(max = 50)
+  @NotBlank
+  String fileId;
 
-  String name;
+  @Size(max = 500)
+  @NotBlank
+  String filePath;
 
-  String extension;
+  @Size(max = 255)
+  @NotBlank
+  String fileName;
 
-  long size;
+  @Size(max = 100)
+  @NotBlank
+  String fileExtension;
+
+  @Min(1)
+  long fileSize;
+
+  @Size(max = 20)
+  @NotBlank
+  String serviceCode;
+
+  @Size(max = 100)
+  @NotBlank
+  String tableName;
+
+  @Size(max = 1000)
+  @NotBlank
+  String distinguishColumnValue;
 
 }
