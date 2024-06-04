@@ -24,6 +24,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 @Slf4j
@@ -55,6 +57,7 @@ public class FileService {
         .build();
   }
 
+  @Transactional
   public FileSaveResponseDto addBulk(FileSaveRequestDto dto) throws IOException {
     String tempPath = getServiceTempPath(dto.getServiceCode());
     String savePath = getServiceSavePath(dto.getServiceCode());
@@ -80,6 +83,11 @@ public class FileService {
     return FileSaveResponseDto.builder()
         .count(fileMapper.insertBulk(fileInsertBulkDtoBuilder.build()))
         .build();
+  }
+
+  @Transactional(readOnly = true, propagation = Propagation.SUPPORTS)
+  public FileDto findByFileId(String fileId) {
+    return fileMapper.findByFileId(fileId);
   }
 
   private String getServiceTempPath(String serviceCode) {

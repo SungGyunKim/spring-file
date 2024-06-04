@@ -1,6 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.spring.file.mapper.FileMapper">
+<resultMap id="findByFileIdMap" type="com.spring.file.model.FileDto">
+  <result column="FILE_ID" property="fileId"/>
+  <result column="FILE_PATH" property="filePath"/>
+  <result column="FILE_NM" property="fileName"/>
+  <result column="FILE_XTNS" property="fileExtension"/>
+  <result column="FILE_SIZE" property="fileSize"/>
+  <result column="SVC_CD" property="serviceCode"/>
+  <result column="TBL_NM" property="tableName"/>
+  <result column="DSTN_CLMN_VAL" property="distinguishColumnValue"/>
+</resultMap>
+
 <insert id="insertBulk" parameterType="com.spring.file.model.FileInsertBulkDto">
   INSERT INTO TB_FILE (
     FILE_ID
@@ -25,4 +36,25 @@
   )
   </foreach>
 </insert>
+
+<select id="findByFileId" parameterType="string" resultMap="findByFileIdMap">
+  SELECT
+    FILE_ID
+    , FILE_PATH
+    , FILE_NM
+    , FILE_XTNS
+    , FILE_SIZE
+    , SVC_CD
+    , TBL_NM
+    , DSTN_CLMN_VAL
+    , PROC_PRGM_ID
+    , RGST_PROCR_ID
+    , RGST_PROC_DTM
+    , UPDT_PROCR_ID
+    , UPDT_PROC_DTM
+  FROM
+      TB_FILE
+  WHERE
+      FILE_ID = #{fileId}
+</select>
 </mapper>
