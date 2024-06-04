@@ -41,7 +41,7 @@ public class FileController {
   @PostMapping("/save")
   public ResponseEntity<FileSaveResponseDto> save(@Valid @RequestBody FileSaveRequestDto dto)
       throws IOException {
-    return ResponseEntity.ok(fileService.addBulk(dto));
+    return ResponseEntity.ok(fileService.save(dto));
   }
 
   @GetMapping("/{fileId}/download")

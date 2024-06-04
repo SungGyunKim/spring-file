@@ -58,7 +58,7 @@ public class FileService {
   }
 
   @Transactional
-  public FileSaveResponseDto addBulk(FileSaveRequestDto dto) throws IOException {
+  public FileSaveResponseDto save(FileSaveRequestDto dto) throws IOException {
     String tempPath = getServiceTempPath(dto.getServiceCode());
     String savePath = getServiceSavePath(dto.getServiceCode());
     FileInsertBulkDtoBuilder fileInsertBulkDtoBuilder = FileInsertBulkDto.builder();
