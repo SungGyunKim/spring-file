@@ -47,6 +47,7 @@ public class FileController {
   public ResponseEntity<Resource> download(@PathVariable String fileId) throws Exception {
     FileDto fileDto = fileService.findByFileId(fileId);
     String fileSize = String.valueOf(fileDto.getFileSize());
+    String filename = String.join(".", fileDto.getFileName(), fileDto.getFileExtension());
     Path filePath = Path.of(fileDto.getFilePath(), fileDto.getFileId());
     Resource resource = UrlResource.from(filePath.toUri());
 
@@ -56,12 +57,15 @@ public class FileController {
       throw new Exception("파일을 읽을 수 없습니다.");
     }
 
+    MediaType contentType = MediaType.APPLICATION_OCTET_STREAM;
+    String contentDisposition = ContentDisposition.attachment()
+        .filename(filename, StandardCharsets.UTF_8)
+        .build()
+        .toString();
+
     return ResponseEntity.ok()
-        .contentType(MediaType.APPLICATION_OCTET_STREAM)
-        .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.attachment()
-            .filename(fileDto.getFileName(), StandardCharsets.UTF_8)
-            .build()
-            .toString())
+        .contentType(contentType)
+        .header(HttpHeaders.CONTENT_DISPOSITION, contentDisposition)
         .header(HttpHeaders.CONTENT_LENGTH, fileSize)
         .body(resource);
   }
