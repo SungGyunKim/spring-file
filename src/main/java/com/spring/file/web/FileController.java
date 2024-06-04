@@ -16,6 +16,7 @@ import org.springframework.core.io.UrlResource;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.http.MediaTypeFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -59,6 +60,34 @@ public class FileController {
 
     MediaType contentType = MediaType.APPLICATION_OCTET_STREAM;
     String contentDisposition = ContentDisposition.attachment()
+        .filename(filename, StandardCharsets.UTF_8)
+        .build()
+        .toString();
+
+    return ResponseEntity.ok()
+        .contentType(contentType)
+        .header(HttpHeaders.CONTENT_DISPOSITION, contentDisposition)
+        .header(HttpHeaders.CONTENT_LENGTH, fileSize)
+        .body(resource);
+  }
+
+  @GetMapping("/{fileId}/inline")
+  public ResponseEntity<Resource> inline(@PathVariable String fileId) throws Exception {
+    FileDto fileDto = fileService.findByFileId(fileId);
+    String fileSize = String.valueOf(fileDto.getFileSize());
+    String filename = String.join(".", fileDto.getFileName(), fileDto.getFileExtension());
+    Path filePath = Path.of(fileDto.getFilePath(), fileDto.getFileId());
+    Resource resource = UrlResource.from(filePath.toUri());
+
+    if (!resource.exists()) {
+      throw new Exception("파일이 존재하지 않습니다.");
+    } else if (!resource.isReadable()) {
+      throw new Exception("파일을 읽을 수 없습니다.");
+    }
+
+    MediaType contentType = MediaTypeFactory.getMediaType(filename)
+        .orElseThrow(() -> new Exception("미디어 타입을 확인할 수 없습니다."));
+    String contentDisposition = ContentDisposition.inline()
         .filename(filename, StandardCharsets.UTF_8)
         .build()
         .toString();
