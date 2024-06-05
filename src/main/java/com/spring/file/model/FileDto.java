@@ -45,4 +45,8 @@ public class FileDto {
   @NotBlank
   String distinguishColumnValue;
 
+  public String getFileNameExtension() {
+    return String.join(".", fileName, fileExtension);
+  }
+
 }

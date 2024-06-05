@@ -51,7 +51,7 @@ public class FileController {
   @GetMapping("/{fileId}/download")
   public ResponseEntity<Resource> download(@PathVariable String fileId) throws Exception {
     FileDto fileDto = fileService.findByFileId(fileId);
-    String filename = String.join(".", fileDto.getFileName(), fileDto.getFileExtension());
+    String filename = fileDto.getFileNameExtension();
     Path filePath = Path.of(fileDto.getFilePath(), fileDto.getFileId());
     Resource resource = UrlResource.from(filePath.toUri());
 
@@ -76,7 +76,7 @@ public class FileController {
   @GetMapping("/{fileId}/inline")
   public ResponseEntity<Resource> inline(@PathVariable String fileId) throws Exception {
     FileDto fileDto = fileService.findByFileId(fileId);
-    String filename = String.join(".", fileDto.getFileName(), fileDto.getFileExtension());
+    String filename = fileDto.getFileNameExtension();
     Path filePath = Path.of(fileDto.getFilePath(), fileDto.getFileId());
     Resource resource = UrlResource.from(filePath.toUri());
 
@@ -104,7 +104,7 @@ public class FileController {
       @RequestHeader HttpHeaders httpHeaders)
       throws Exception {
     FileDto fileDto = fileService.findByFileId(fileId);
-    String filename = String.join(".", fileDto.getFileName(), fileDto.getFileExtension());
+    String filename = fileDto.getFileNameExtension();
     Path filePath = Path.of(fileDto.getFilePath(), fileDto.getFileId());
     Resource resource = UrlResource.from(filePath.toUri());
 
