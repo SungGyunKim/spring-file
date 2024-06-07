@@ -28,10 +28,16 @@ public class FileProperties {
   @NotBlank
   private final String saveFolder;
 
-  public FileProperties(String basePath, String tempFolder, String saveFolder) {
+  @Size(min = 1)
+  @NotBlank
+  private final String encryptorPassword;
+
+  public FileProperties(String basePath, String tempFolder, String saveFolder,
+      String encryptorPassword) {
     this.basePath = DefaultUtils.getValue(basePath, Paths.get("file").toAbsolutePath().toString());
     this.tempFolder = DefaultUtils.getValue(tempFolder, "temp");
     this.saveFolder = DefaultUtils.getValue(saveFolder, "save");
+    this.encryptorPassword = DefaultUtils.getValue(encryptorPassword, "encryptorPassword");
   }
 
   public String getTempPath() {

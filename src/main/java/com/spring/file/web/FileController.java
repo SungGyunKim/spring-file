@@ -9,10 +9,8 @@ import com.spring.file.service.FileService;
 import jakarta.validation.Valid;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Path;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.Resource;
-import org.springframework.core.io.UrlResource;
 import org.springframework.core.io.support.ResourceRegion;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
@@ -38,7 +36,7 @@ public class FileController {
 
   @PostMapping("/upload")
   public ResponseEntity<FileUploadResponseDto> upload(@Valid FileUploadRequestDto dto)
-      throws IOException {
+      throws Exception {
     return ResponseEntity.ok(fileService.upload(dto));
   }
 
@@ -52,14 +50,7 @@ public class FileController {
   public ResponseEntity<Resource> download(@PathVariable String fileId) throws Exception {
     FileDto fileDto = fileService.findByFileId(fileId);
     String filename = fileDto.getFileNameExtension();
-    Path filePath = Path.of(fileDto.getFilePath(), fileDto.getFileId());
-    Resource resource = UrlResource.from(filePath.toUri());
-
-    if (!resource.exists()) {
-      throw new Exception("파일이 존재하지 않습니다.");
-    } else if (!resource.isReadable()) {
-      throw new Exception("파일을 읽을 수 없습니다.");
-    }
+    Resource resource = fileService.getResource(fileDto);
 
     MediaType contentType = MediaType.APPLICATION_OCTET_STREAM;
     String contentDisposition = ContentDisposition.attachment()
@@ -77,14 +68,7 @@ public class FileController {
   public ResponseEntity<Resource> inline(@PathVariable String fileId) throws Exception {
     FileDto fileDto = fileService.findByFileId(fileId);
     String filename = fileDto.getFileNameExtension();
-    Path filePath = Path.of(fileDto.getFilePath(), fileDto.getFileId());
-    Resource resource = UrlResource.from(filePath.toUri());
-
-    if (!resource.exists()) {
-      throw new Exception("파일이 존재하지 않습니다.");
-    } else if (!resource.isReadable()) {
-      throw new Exception("파일을 읽을 수 없습니다.");
-    }
+    Resource resource = fileService.getResource(fileDto);
 
     MediaType contentType = MediaTypeFactory.getMediaType(filename)
         .orElseThrow(() -> new Exception("미디어 타입을 확인할 수 없습니다."));
@@ -101,12 +85,10 @@ public class FileController {
 
   @GetMapping("/{fileId}/stream")
   public ResponseEntity<ResourceRegion> stream(@PathVariable String fileId,
-      @RequestHeader HttpHeaders httpHeaders)
-      throws Exception {
+      @RequestHeader HttpHeaders httpHeaders) throws Exception {
     FileDto fileDto = fileService.findByFileId(fileId);
     String filename = fileDto.getFileNameExtension();
-    Path filePath = Path.of(fileDto.getFilePath(), fileDto.getFileId());
-    Resource resource = UrlResource.from(filePath.toUri());
+    Resource resource = fileService.getResource(fileDto);
 
     long chunkSize = 1024 * 1024;
     HttpRange httpRange = httpHeaders.getRange().stream()

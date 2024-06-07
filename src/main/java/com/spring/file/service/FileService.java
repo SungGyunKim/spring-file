@@ -13,6 +13,9 @@ import com.spring.file.model.FileUploadedDto;
 import com.spring.file.properties.FileProperties;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -23,6 +26,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
+import org.jasypt.encryption.pbe.StandardPBEByteEncryptor;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,16 +41,18 @@ public class FileService {
 
   private final FileProperties fileProperties;
 
+  private final StandardPBEByteEncryptor fileEncryptor;
+
   private final FileMapper fileMapper;
 
-  public FileUploadResponseDto upload(FileUploadRequestDto dto) throws IOException {
+  public FileUploadResponseDto upload(FileUploadRequestDto dto) throws Exception {
     String tempPath = getServiceTempPath(dto.getServiceCode());
     List<FileUploadedDto> fileUploadedList = new ArrayList<>();
 
     for (MultipartFile multipartFile : dto.getFiles()) {
-      File file = makeFile(tempPath, multipartFile);
+      String fileId = makeFile(tempPath, multipartFile);
       FileUploadedDto fileUploaded = FileUploadedDto.builder()
-          .fileId(file.getName())
+          .fileId(fileId)
           .fileName(FilenameUtils.removeExtension(multipartFile.getOriginalFilename()))
           .fileExtension(FilenameUtils.getExtension(multipartFile.getOriginalFilename()))
           .fileSize(multipartFile.getSize())
@@ -112,13 +120,27 @@ public class FileService {
         .replace(DELIMITER, File.separator);
   }
 
-  private File makeFile(String uploadPath, MultipartFile multipartFile) throws IOException {
+  private String makeFile(String uploadPath, MultipartFile multipartFile) throws IOException {
     String fileName = UUID.randomUUID().toString();
-    File file = new File(uploadPath, fileName);
-    file.mkdirs();
-    multipartFile.transferTo(file);
+    byte[] encrypted = fileEncryptor.encrypt(multipartFile.getBytes());
+    Path path = Paths.get(uploadPath, fileName);
+    Files.write(path, encrypted);
 
-    return file;
+    return fileName;
+  }
+
+  public Resource getResource(FileDto fileDto) throws Exception {
+    Path path = Paths.get(fileDto.getFilePath(), fileDto.getFileId());
+    byte[] decrypted = fileEncryptor.decrypt(Files.readAllBytes(path));
+    Resource resource = new ByteArrayResource(decrypted);
+
+    if (!resource.exists()) {
+      throw new Exception("파일이 존재하지 않습니다.");
+    } else if (!resource.isReadable()) {
+      throw new Exception("파일을 읽을 수 없습니다.");
+    }
+
+    return resource;
   }
 
 }
