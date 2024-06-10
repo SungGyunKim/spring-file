@@ -2,9 +2,6 @@ package com.spring.file.service;
 
 import com.spring.file.mapper.FileMapper;
 import com.spring.file.model.FileDto;
-import com.spring.file.model.FileInsertBulkDto;
-import com.spring.file.model.FileInsertBulkDto.FileInsertBulkDtoBuilder;
-import com.spring.file.model.FileSaveDto;
 import com.spring.file.model.FileSaveRequestDto;
 import com.spring.file.model.FileSaveResponseDto;
 import com.spring.file.model.FileUploadRequestDto;
@@ -32,6 +29,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.ObjectUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 @Slf4j
@@ -69,27 +67,68 @@ public class FileService {
   public FileSaveResponseDto save(FileSaveRequestDto dto) throws IOException {
     String tempPath = getServiceTempPath(dto.getServiceCode());
     String savePath = getServiceSavePath(dto.getServiceCode());
-    FileInsertBulkDtoBuilder fileInsertBulkDtoBuilder = FileInsertBulkDto.builder();
 
-    for (FileSaveDto fileSaveDto : dto.getFiles()) {
-      File tempFile = new File(tempPath, fileSaveDto.getFileId());
-      File saveFile = new File(savePath, fileSaveDto.getFileId());
+    List<FileDto> savedFileList = fileMapper.findByServiceCodeAndTableNameAndDistinguishColumnValue(
+        FileDto.builder().
+            serviceCode(dto.getServiceCode())
+            .tableName(dto.getTableName())
+            .distinguishColumnValue(dto.getDistinguishColumnValue())
+            .build());
+
+    // target
+    List<FileDto> insertFileList = dto.getFiles().stream()
+        .filter(file -> savedFileList.stream()
+            .noneMatch(savedFile -> savedFile.getFileId().equals(file.getFileId()))
+        )
+        .map(file -> FileDto.builder()
+            .fileId(file.getFileId())
+            .filePath(savePath)
+            .fileName(file.getFileName())
+            .fileExtension(file.getFileExtension())
+            .fileSize(file.getFileSize())
+            .serviceCode(dto.getServiceCode())
+            .tableName(dto.getTableName())
+            .distinguishColumnValue(dto.getDistinguishColumnValue())
+            .build()
+        )
+        .toList();
+    List<FileDto> deleteFileList = savedFileList.stream()
+        .filter(savedFile -> dto.getFiles().stream()
+            .noneMatch(file -> savedFile.getFileId().equals(file.getFileId()))
+        ).toList();
+    List<FileDto> maintainedList = savedFileList.stream()
+        .filter(savedFile -> dto.getFiles().stream()
+            .anyMatch(file -> savedFile.getFileId().equals(file.getFileId()))
+        ).toList();
+
+    // database
+    if (!ObjectUtils.isEmpty(insertFileList)) {
+      fileMapper.insertBulk(insertFileList);
+    }
+    if (!ObjectUtils.isEmpty(deleteFileList)) {
+      fileMapper.deleteBulk(deleteFileList);
+    }
+
+    // file
+    for (FileDto fileDto : insertFileList) {
+      File tempFile = new File(tempPath, fileDto.getFileId());
+      File saveFile = new File(savePath, fileDto.getFileId());
       FileUtils.moveFile(tempFile, saveFile);
+    }
+    for (FileDto fileDto : deleteFileList) {
+      File directory = new File(fileDto.getFilePath());
+      File file = FileUtils.getFile(directory, fileDto.getFileId());
 
-      fileInsertBulkDtoBuilder.file(FileDto.builder()
-          .fileId(fileSaveDto.getFileId())
-          .filePath(savePath)
-          .fileName(fileSaveDto.getFileName())
-          .fileExtension(fileSaveDto.getFileExtension())
-          .fileSize(saveFile.length())
-          .serviceCode(dto.getServiceCode())
-          .tableName(dto.getTableName())
-          .distinguishColumnValue(dto.getDistinguishColumnValue())
-          .build());
+      FileUtils.delete(file);
+      if (ObjectUtils.isEmpty(directory.list())) {
+        directory.delete();
+      }
     }
 
     return FileSaveResponseDto.builder()
-        .count(fileMapper.insertBulk(fileInsertBulkDtoBuilder.build()))
+        .insertedList(insertFileList)
+        .deletedList(deleteFileList)
+        .maintainedList(maintainedList)
         .build();
   }
 

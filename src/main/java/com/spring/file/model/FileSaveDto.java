@@ -29,4 +29,6 @@ public class FileSaveDto {
   @NotBlank
   String fileExtension;
 
+  long fileSize;
+
 }

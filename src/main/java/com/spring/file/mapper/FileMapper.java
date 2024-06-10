@@ -1,14 +1,18 @@
 package com.spring.file.mapper;
 
 import com.spring.file.model.FileDto;
-import com.spring.file.model.FileInsertBulkDto;
+import java.util.List;
 import org.apache.ibatis.annotations.Mapper;
 
 @Mapper
 public interface FileMapper {
 
-  int insertBulk(FileInsertBulkDto dto);
+  int insertBulk(List<FileDto> list);
+
+  int deleteBulk(List<FileDto> list);
 
   FileDto findByFileId(String fileId);
+
+  List<FileDto> findByServiceCodeAndTableNameAndDistinguishColumnValue(FileDto dto);
 
 }

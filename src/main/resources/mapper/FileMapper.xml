@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.spring.file.mapper.FileMapper">
-<resultMap id="findByFileIdMap" type="com.spring.file.model.FileDto">
+<resultMap id="FileMap" type="com.spring.file.model.FileDto">
   <result column="FILE_ID" property="fileId"/>
   <result column="FILE_PATH" property="filePath"/>
   <result column="FILE_NM" property="fileName"/>
@@ -12,7 +12,7 @@
   <result column="DSTN_CLMN_VAL" property="distinguishColumnValue"/>
 </resultMap>
 
-<insert id="insertBulk" parameterType="com.spring.file.model.FileInsertBulkDto">
+<insert id="insertBulk" parameterType="java.util.List">
   INSERT INTO TB_FILE (
     FILE_ID
     , FILE_PATH
@@ -23,21 +23,29 @@
     , TBL_NM
     , DSTN_CLMN_VAL
   ) VALUES
-  <foreach collection="files" item="file" separator=",">
+  <foreach collection="list" item="item" separator=",">
   (
-    #{file.fileId}
-    , #{file.filePath}
-    , #{file.fileName}
-    , #{file.fileExtension}
-    , #{file.fileSize}
-    , #{file.serviceCode}
-    , #{file.tableName}
-    , #{file.distinguishColumnValue}
+    #{item.fileId}
+    , #{item.filePath}
+    , #{item.fileName}
+    , #{item.fileExtension}
+    , #{item.fileSize}
+    , #{item.serviceCode}
+    , #{item.tableName}
+    , #{item.distinguishColumnValue}
   )
   </foreach>
 </insert>
 
-<select id="findByFileId" parameterType="string" resultMap="findByFileIdMap">
+<delete id="deleteBulk" parameterType="java.util.List">
+  DELETE FROM TB_FILE
+  WHERE FILE_ID IN
+  <foreach collection="list" item="item" open="(" separator="," close=")">
+    #{item.fileId}
+  </foreach>
+</delete>
+
+<select id="findByFileId" parameterType="string" resultMap="FileMap">
   SELECT
     FILE_ID
     , FILE_PATH
@@ -56,5 +64,28 @@
       TB_FILE
   WHERE
       FILE_ID = #{fileId}
+</select>
+
+<select id="findByServiceCodeAndTableNameAndDistinguishColumnValue" parameterType="com.spring.file.model.FileDto" resultMap="FileMap">
+  SELECT
+    FILE_ID
+    , FILE_PATH
+    , FILE_NM
+    , FILE_XTNS
+    , FILE_SIZE
+    , SVC_CD
+    , TBL_NM
+    , DSTN_CLMN_VAL
+    , PROC_PRGM_ID
+    , RGST_PROCR_ID
+    , RGST_PROC_DTM
+    , UPDT_PROCR_ID
+    , UPDT_PROC_DTM
+  FROM
+      TB_FILE
+  WHERE
+      SVC_CD = #{serviceCode}
+      AND TBL_NM = #{tableName}
+      AND DSTN_CLMN_VAL = #{distinguishColumnValue}
 </select>
 </mapper>
