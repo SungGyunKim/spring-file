@@ -40,7 +40,7 @@ public class FileController {
   private final FileService fileService;
 
   @PostMapping("/upload")
-  public ResponseEntity<FileUploadResponseDto> upload(@Valid @RequestBody FileUploadRequestDto dto)
+  public ResponseEntity<FileUploadResponseDto> upload(@Valid FileUploadRequestDto dto)
       throws Exception {
     return ResponseEntity.ok(fileService.upload(dto));
   }

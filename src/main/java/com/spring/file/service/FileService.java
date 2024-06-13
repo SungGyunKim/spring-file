@@ -193,12 +193,20 @@ public class FileService {
 
   private void deleteFile(List<FileDto> fileDtoList) throws IOException {
     for (FileDto fileDto : fileDtoList) {
-      File directory = new File(fileDto.getFilePath());
-      File file = FileUtils.getFile(directory, fileDto.getFileId());
+      File file = FileUtils.getFile(fileDto.getFilePath(), fileDto.getFileId());
 
       FileUtils.delete(file);
-      if (ObjectUtils.isEmpty(directory.list())) {
-        directory.delete();
+      deleteDirectory(file.getParentFile());
+    }
+  }
+
+  private void deleteDirectory(File directory) throws IOException {
+    if (ObjectUtils.isEmpty(directory.list())) {
+      FileUtils.deleteDirectory(directory);
+
+      File parentDirectory = directory.getParentFile();
+      if (!parentDirectory.toPath().endsWith(fileProperties.getSavePath())) {
+        deleteDirectory(parentDirectory);
       }
     }
   }
