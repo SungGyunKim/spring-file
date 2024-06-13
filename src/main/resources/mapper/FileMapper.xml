@@ -37,7 +37,7 @@
   </foreach>
 </insert>
 
-<delete id="deleteBulk" parameterType="java.util.List">
+<delete id="deleteByFileIds">
   DELETE FROM TB_FILE
   WHERE FILE_ID IN
   <foreach collection="fileIds" item="fileId" open="(" separator="," close=")">
@@ -89,7 +89,7 @@
   </foreach>
 </select>
 
-<select id="findByServiceCodeAndTableNameAndDistinguishColumnValue" parameterType="com.spring.file.model.FileDto" resultMap="FileMap">
+<select id="findByService" parameterType="com.spring.file.model.FileDto" resultMap="FileMap">
   SELECT
     FILE_ID
     , FILE_PATH
@@ -106,9 +106,16 @@
     , UPDT_PROC_DTM
   FROM
       TB_FILE
-  WHERE
-      SVC_CD = #{serviceCode}
-      AND TBL_NM = #{tableName}
-      AND DSTN_CLMN_VAL = #{distinguishColumnValue}
+  <where>
+    <if test="serviceCode != null and serviceCode != ''">
+        AND SVC_CD = #{serviceCode}
+    </if>
+    <if test="tableName != null and tableName != ''">
+        AND TBL_NM = #{tableName}
+    </if>
+    <if test="distinguishColumnValue != null and distinguishColumnValue != ''">
+        AND DSTN_CLMN_VAL = #{distinguishColumnValue}
+    </if>
+  </where>
 </select>
 </mapper>

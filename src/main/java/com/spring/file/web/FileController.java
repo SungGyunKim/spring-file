@@ -9,9 +9,11 @@ import com.spring.file.model.FileUploadRequestDto;
 import com.spring.file.model.FileUploadResponseDto;
 import com.spring.file.service.FileService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import lombok.RequiredArgsConstructor;
+import org.hibernate.validator.constraints.UUID;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.ResourceRegion;
 import org.springframework.http.ContentDisposition;
@@ -38,7 +40,7 @@ public class FileController {
   private final FileService fileService;
 
   @PostMapping("/upload")
-  public ResponseEntity<FileUploadResponseDto> upload(@Valid FileUploadRequestDto dto)
+  public ResponseEntity<FileUploadResponseDto> upload(@Valid @RequestBody FileUploadRequestDto dto)
       throws Exception {
     return ResponseEntity.ok(fileService.upload(dto));
   }
@@ -49,14 +51,15 @@ public class FileController {
     return ResponseEntity.ok(fileService.save(dto));
   }
 
-  @DeleteMapping("/by-file-id")
-  public ResponseEntity<FileDeleteByFileIdsResponseDto> deleteByFileId(
+  @DeleteMapping("/by-file-ids")
+  public ResponseEntity<FileDeleteByFileIdsResponseDto> deleteByFileIds(
       @Valid @RequestBody FileDeleteByFileIdsRequestDto dto) throws IOException {
     return ResponseEntity.ok(fileService.deleteByFileIds(dto));
   }
 
-  @GetMapping("/{fileId}/download")
-  public ResponseEntity<Resource> download(@PathVariable String fileId) throws Exception {
+  @GetMapping("/{fileId}/attach")
+  public ResponseEntity<Resource> attach(@PathVariable @NotBlank @UUID String fileId)
+      throws Exception {
     FileDto fileDto = fileService.findByFileId(fileId);
     String filename = fileDto.getFileNameExtension();
     Resource resource = fileService.getResource(fileDto);
@@ -74,7 +77,8 @@ public class FileController {
   }
 
   @GetMapping("/{fileId}/inline")
-  public ResponseEntity<Resource> inline(@PathVariable String fileId) throws Exception {
+  public ResponseEntity<Resource> inline(@PathVariable @NotBlank @UUID String fileId)
+      throws Exception {
     FileDto fileDto = fileService.findByFileId(fileId);
     String filename = fileDto.getFileNameExtension();
     Resource resource = fileService.getResource(fileDto);
@@ -93,7 +97,7 @@ public class FileController {
   }
 
   @GetMapping("/{fileId}/stream")
-  public ResponseEntity<ResourceRegion> stream(@PathVariable String fileId,
+  public ResponseEntity<ResourceRegion> stream(@PathVariable @NotBlank @UUID String fileId,
       @RequestHeader HttpHeaders httpHeaders) throws Exception {
     FileDto fileDto = fileService.findByFileId(fileId);
     String filename = fileDto.getFileNameExtension();

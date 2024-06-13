@@ -3,7 +3,6 @@ package com.spring.file.service;
 import com.spring.file.mapper.FileMapper;
 import com.spring.file.model.FileDeleteByFileIdsRequestDto;
 import com.spring.file.model.FileDeleteByFileIdsResponseDto;
-import com.spring.file.model.FileDeleteByFileIdsResponseDto.FileDeleteByFileIdsResponseDtoBuilder;
 import com.spring.file.model.FileDto;
 import com.spring.file.model.FileSaveRequestDto;
 import com.spring.file.model.FileSaveResponseDto;
@@ -58,6 +57,7 @@ public class FileService {
           .fileExtension(FilenameUtils.getExtension(multipartFile.getOriginalFilename()))
           .fileSize(multipartFile.getSize())
           .build();
+
       fileUploadedList.add(fileUploaded);
     }
 
@@ -71,7 +71,7 @@ public class FileService {
     String tempPath = getServiceTempPath(dto.getServiceCode());
     String savePath = getServiceSavePath(dto.getServiceCode());
 
-    List<FileDto> savedFileList = fileMapper.findByServiceCodeAndTableNameAndDistinguishColumnValue(
+    List<FileDto> savedFileList = fileMapper.findByService(
         FileDto.builder().
             serviceCode(dto.getServiceCode())
             .tableName(dto.getTableName())
@@ -92,8 +92,7 @@ public class FileService {
             .serviceCode(dto.getServiceCode())
             .tableName(dto.getTableName())
             .distinguishColumnValue(dto.getDistinguishColumnValue())
-            .build()
-        )
+            .build())
         .toList();
     List<FileDto> deleteFileList = savedFileList.stream()
         .filter(savedFile -> dto.getFiles().stream()
@@ -109,27 +108,19 @@ public class FileService {
       fileMapper.insertBulk(insertFileList);
     }
     if (!ObjectUtils.isEmpty(deleteFileList)) {
-      fileMapper.deleteBulk(deleteFileList.stream()
+      fileMapper.deleteByFileIds(deleteFileList.stream()
           .map(FileDto::getFileId)
-          .toList()
-      );
+          .toList());
     }
 
     // file
     for (FileDto fileDto : insertFileList) {
       File tempFile = new File(tempPath, fileDto.getFileId());
       File saveFile = new File(savePath, fileDto.getFileId());
+
       FileUtils.moveFile(tempFile, saveFile);
     }
-    for (FileDto fileDto : deleteFileList) {
-      File directory = new File(fileDto.getFilePath());
-      File file = FileUtils.getFile(directory, fileDto.getFileId());
-
-      FileUtils.delete(file);
-      if (ObjectUtils.isEmpty(directory.list())) {
-        directory.delete();
-      }
-    }
+    deleteFile(deleteFileList);
 
     return FileSaveResponseDto.builder()
         .insertedList(insertFileList)
@@ -141,12 +132,11 @@ public class FileService {
   @Transactional
   public FileDeleteByFileIdsResponseDto deleteByFileIds(FileDeleteByFileIdsRequestDto dto)
       throws IOException {
-    FileDeleteByFileIdsResponseDtoBuilder responseBuilder = FileDeleteByFileIdsResponseDto.builder();
     List<FileDto> fileDtoList = fileMapper.findByFileIds(dto.getFileIds());
-    int deletedCount = fileMapper.deleteBulk(dto.getFileIds());
+    int deletedCount = fileMapper.deleteByFileIds(dto.getFileIds());
     deleteFile(fileDtoList);
 
-    return responseBuilder
+    return FileDeleteByFileIdsResponseDto.builder()
         .count(deletedCount)
         .build();
   }
@@ -179,12 +169,12 @@ public class FileService {
   }
 
   private String makeFile(String uploadPath, MultipartFile multipartFile) throws IOException {
-    String fileName = UUID.randomUUID().toString();
+    String fileId = UUID.randomUUID().toString();
     byte[] encrypted = fileEncryptor.encrypt(multipartFile.getBytes());
-    Path path = Paths.get(uploadPath, fileName);
+    Path path = Paths.get(uploadPath, fileId);
     Files.write(path, encrypted);
 
-    return fileName;
+    return fileId;
   }
 
   public Resource getResource(FileDto fileDto) throws Exception {
