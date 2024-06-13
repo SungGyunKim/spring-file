@@ -3,6 +3,8 @@ package com.spring.file.web;
 import com.spring.file.model.FileDeleteByFileIdsRequestDto;
 import com.spring.file.model.FileDeleteByFileIdsResponseDto;
 import com.spring.file.model.FileDto;
+import com.spring.file.model.FileFindByServiceRequestDto;
+import com.spring.file.model.FileFindByServiceResponseDto;
 import com.spring.file.model.FileSaveRequestDto;
 import com.spring.file.model.FileSaveResponseDto;
 import com.spring.file.model.FileUploadRequestDto;
@@ -25,6 +27,7 @@ import org.springframework.http.MediaTypeFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -49,6 +52,12 @@ public class FileController {
   public ResponseEntity<FileSaveResponseDto> save(@Valid @RequestBody FileSaveRequestDto dto)
       throws IOException {
     return ResponseEntity.ok(fileService.save(dto));
+  }
+
+  @GetMapping("/by-service")
+  public ResponseEntity<FileFindByServiceResponseDto> findByService(
+      @Valid @ModelAttribute FileFindByServiceRequestDto dto) {
+    return ResponseEntity.ok(fileService.findByService(dto));
   }
 
   @DeleteMapping("/by-file-ids")

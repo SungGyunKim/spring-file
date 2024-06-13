@@ -4,6 +4,8 @@ import com.spring.file.mapper.FileMapper;
 import com.spring.file.model.FileDeleteByFileIdsRequestDto;
 import com.spring.file.model.FileDeleteByFileIdsResponseDto;
 import com.spring.file.model.FileDto;
+import com.spring.file.model.FileFindByServiceRequestDto;
+import com.spring.file.model.FileFindByServiceResponseDto;
 import com.spring.file.model.FileSaveRequestDto;
 import com.spring.file.model.FileSaveResponseDto;
 import com.spring.file.model.FileUploadRequestDto;
@@ -144,6 +146,20 @@ public class FileService {
   @Transactional(readOnly = true, propagation = Propagation.SUPPORTS)
   public FileDto findByFileId(String fileId) {
     return fileMapper.findByFileId(fileId);
+  }
+
+  @Transactional(readOnly = true, propagation = Propagation.SUPPORTS)
+  public FileFindByServiceResponseDto findByService(FileFindByServiceRequestDto dto) {
+    FileDto params = FileDto.builder()
+        .serviceCode(dto.getServiceCode())
+        .tableName(dto.getTableName())
+        .distinguishColumnValue(dto.getDistinguishColumnValue())
+        .build();
+    List<FileDto> result = fileMapper.findByService(params);
+
+    return FileFindByServiceResponseDto.builder()
+        .files(result)
+        .build();
   }
 
   private String getServiceTempPath(String serviceCode) {
