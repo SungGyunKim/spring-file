@@ -1,6 +1,9 @@
 package com.spring.file.service;
 
 import com.spring.file.mapper.FileMapper;
+import com.spring.file.model.FileDeleteByFileIdsRequestDto;
+import com.spring.file.model.FileDeleteByFileIdsResponseDto;
+import com.spring.file.model.FileDeleteByFileIdsResponseDto.FileDeleteByFileIdsResponseDtoBuilder;
 import com.spring.file.model.FileDto;
 import com.spring.file.model.FileSaveRequestDto;
 import com.spring.file.model.FileSaveResponseDto;
@@ -106,7 +109,10 @@ public class FileService {
       fileMapper.insertBulk(insertFileList);
     }
     if (!ObjectUtils.isEmpty(deleteFileList)) {
-      fileMapper.deleteBulk(deleteFileList);
+      fileMapper.deleteBulk(deleteFileList.stream()
+          .map(FileDto::getFileId)
+          .toList()
+      );
     }
 
     // file
@@ -129,6 +135,19 @@ public class FileService {
         .insertedList(insertFileList)
         .deletedList(deleteFileList)
         .maintainedList(maintainedList)
+        .build();
+  }
+
+  @Transactional
+  public FileDeleteByFileIdsResponseDto deleteByFileIds(FileDeleteByFileIdsRequestDto dto)
+      throws IOException {
+    FileDeleteByFileIdsResponseDtoBuilder responseBuilder = FileDeleteByFileIdsResponseDto.builder();
+    List<FileDto> fileDtoList = fileMapper.findByFileIds(dto.getFileIds());
+    int deletedCount = fileMapper.deleteBulk(dto.getFileIds());
+    deleteFile(fileDtoList);
+
+    return responseBuilder
+        .count(deletedCount)
         .build();
   }
 
@@ -180,6 +199,18 @@ public class FileService {
     }
 
     return resource;
+  }
+
+  private void deleteFile(List<FileDto> fileDtoList) throws IOException {
+    for (FileDto fileDto : fileDtoList) {
+      File directory = new File(fileDto.getFilePath());
+      File file = FileUtils.getFile(directory, fileDto.getFileId());
+
+      FileUtils.delete(file);
+      if (ObjectUtils.isEmpty(directory.list())) {
+        directory.delete();
+      }
+    }
   }
 
 }

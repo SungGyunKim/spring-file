@@ -40,8 +40,8 @@
 <delete id="deleteBulk" parameterType="java.util.List">
   DELETE FROM TB_FILE
   WHERE FILE_ID IN
-  <foreach collection="list" item="item" open="(" separator="," close=")">
-    #{item.fileId}
+  <foreach collection="fileIds" item="fileId" open="(" separator="," close=")">
+    #{fileId}
   </foreach>
 </delete>
 
@@ -64,6 +64,29 @@
       TB_FILE
   WHERE
       FILE_ID = #{fileId}
+</select>
+
+<select id="findByFileIds" resultMap="FileMap">
+  SELECT
+    FILE_ID
+    , FILE_PATH
+    , FILE_NM
+    , FILE_XTNS
+    , FILE_SIZE
+    , SVC_CD
+    , TBL_NM
+    , DSTN_CLMN_VAL
+    , PROC_PRGM_ID
+    , RGST_PROCR_ID
+    , RGST_PROC_DTM
+    , UPDT_PROCR_ID
+    , UPDT_PROC_DTM
+  FROM
+      TB_FILE
+  WHERE FILE_ID IN
+  <foreach collection="fileIds" item="fileId" open="(" separator="," close=")">
+    #{fileId}
+  </foreach>
 </select>
 
 <select id="findByServiceCodeAndTableNameAndDistinguishColumnValue" parameterType="com.spring.file.model.FileDto" resultMap="FileMap">
