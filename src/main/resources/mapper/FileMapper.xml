@@ -37,14 +37,6 @@
   </foreach>
 </insert>
 
-<delete id="deleteByFileIds">
-  DELETE FROM TB_FILE
-  WHERE FILE_ID IN
-  <foreach collection="fileIds" item="fileId" open="(" separator="," close=")">
-    #{fileId}
-  </foreach>
-</delete>
-
 <select id="findByFileId" parameterType="string" resultMap="FileMap">
   SELECT
     FILE_ID
@@ -89,6 +81,14 @@
   </foreach>
 </select>
 
+<delete id="deleteByFileIds">
+  DELETE FROM TB_FILE
+  WHERE FILE_ID IN
+  <foreach collection="fileIds" item="fileId" open="(" separator="," close=")">
+    #{fileId}
+  </foreach>
+</delete>
+
 <select id="findByService" parameterType="com.spring.file.model.FileDto" resultMap="FileMap">
   SELECT
     FILE_ID
@@ -106,16 +106,26 @@
     , UPDT_PROC_DTM
   FROM
       TB_FILE
-  <where>
-    <if test="serviceCode != null and serviceCode != ''">
-        AND SVC_CD = #{serviceCode}
-    </if>
-    <if test="tableName != null and tableName != ''">
-        AND TBL_NM = #{tableName}
-    </if>
-    <if test="distinguishColumnValue != null and distinguishColumnValue != ''">
-        AND DSTN_CLMN_VAL = #{distinguishColumnValue}
-    </if>
-  </where>
+  WHERE
+      SVC_CD = #{serviceCode}
+      <if test="tableName != null and tableName != ''">
+          AND TBL_NM = #{tableName}
+      </if>
+      <if test="distinguishColumnValue != null and distinguishColumnValue != ''">
+          AND DSTN_CLMN_VAL = #{distinguishColumnValue}
+      </if>
 </select>
+
+<delete id="deleteByService" parameterType="com.spring.file.model.FileDto">
+  DELETE FROM TB_FILE
+  WHERE
+      SVC_CD = #{serviceCode}
+      <if test="tableName != null and tableName != ''">
+          AND TBL_NM = #{tableName}
+      </if>
+      <if test="distinguishColumnValue != null and distinguishColumnValue != ''">
+          AND DSTN_CLMN_VAL = #{distinguishColumnValue}
+      </if>
+</delete>
+
 </mapper>

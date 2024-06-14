@@ -3,6 +3,8 @@ package com.spring.file.service;
 import com.spring.file.mapper.FileMapper;
 import com.spring.file.model.FileDeleteByFileIdsRequestDto;
 import com.spring.file.model.FileDeleteByFileIdsResponseDto;
+import com.spring.file.model.FileDeleteByServiceRequestDto;
+import com.spring.file.model.FileDeleteByServiceResponseDto;
 import com.spring.file.model.FileDto;
 import com.spring.file.model.FileFindByServiceRequestDto;
 import com.spring.file.model.FileFindByServiceResponseDto;
@@ -131,6 +133,11 @@ public class FileService {
         .build();
   }
 
+  @Transactional(readOnly = true, propagation = Propagation.SUPPORTS)
+  public FileDto findByFileId(String fileId) {
+    return fileMapper.findByFileId(fileId);
+  }
+
   @Transactional
   public FileDeleteByFileIdsResponseDto deleteByFileIds(FileDeleteByFileIdsRequestDto dto)
       throws IOException {
@@ -143,10 +150,6 @@ public class FileService {
         .build();
   }
 
-  @Transactional(readOnly = true, propagation = Propagation.SUPPORTS)
-  public FileDto findByFileId(String fileId) {
-    return fileMapper.findByFileId(fileId);
-  }
 
   @Transactional(readOnly = true, propagation = Propagation.SUPPORTS)
   public FileFindByServiceResponseDto findByService(FileFindByServiceRequestDto dto) {
@@ -159,6 +162,23 @@ public class FileService {
 
     return FileFindByServiceResponseDto.builder()
         .files(result)
+        .build();
+  }
+
+  @Transactional
+  public FileDeleteByServiceResponseDto deleteByService(FileDeleteByServiceRequestDto dto)
+      throws IOException {
+    FileDto params = FileDto.builder()
+        .serviceCode(dto.getServiceCode())
+        .tableName(dto.getTableName())
+        .distinguishColumnValue(dto.getDistinguishColumnValue())
+        .build();
+    List<FileDto> fileDtoList = fileMapper.findByService(params);
+    int deletedCount = fileMapper.deleteByService(params);
+    deleteFile(fileDtoList);
+
+    return FileDeleteByServiceResponseDto.builder()
+        .count(deletedCount)
         .build();
   }
 

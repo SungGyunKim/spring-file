@@ -9,12 +9,14 @@ public interface FileMapper {
 
   int insertBulk(List<FileDto> list);
 
-  int deleteByFileIds(List<String> fileIds);
-
   FileDto findByFileId(String fileId);
 
   List<FileDto> findByFileIds(List<String> fileIds);
 
+  int deleteByFileIds(List<String> fileIds);
+
   List<FileDto> findByService(FileDto dto);
+
+  int deleteByService(FileDto dto);
 
 }

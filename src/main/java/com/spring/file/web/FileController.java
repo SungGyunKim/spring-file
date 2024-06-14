@@ -2,6 +2,8 @@ package com.spring.file.web;
 
 import com.spring.file.model.FileDeleteByFileIdsRequestDto;
 import com.spring.file.model.FileDeleteByFileIdsResponseDto;
+import com.spring.file.model.FileDeleteByServiceRequestDto;
+import com.spring.file.model.FileDeleteByServiceResponseDto;
 import com.spring.file.model.FileDto;
 import com.spring.file.model.FileFindByServiceRequestDto;
 import com.spring.file.model.FileFindByServiceResponseDto;
@@ -54,16 +56,22 @@ public class FileController {
     return ResponseEntity.ok(fileService.save(dto));
   }
 
+  @DeleteMapping("/by-file-ids")
+  public ResponseEntity<FileDeleteByFileIdsResponseDto> deleteByFileIds(
+      @Valid @RequestBody FileDeleteByFileIdsRequestDto dto) throws IOException {
+    return ResponseEntity.ok(fileService.deleteByFileIds(dto));
+  }
+
   @GetMapping("/by-service")
   public ResponseEntity<FileFindByServiceResponseDto> findByService(
       @Valid @ModelAttribute FileFindByServiceRequestDto dto) {
     return ResponseEntity.ok(fileService.findByService(dto));
   }
 
-  @DeleteMapping("/by-file-ids")
-  public ResponseEntity<FileDeleteByFileIdsResponseDto> deleteByFileIds(
-      @Valid @RequestBody FileDeleteByFileIdsRequestDto dto) throws IOException {
-    return ResponseEntity.ok(fileService.deleteByFileIds(dto));
+  @DeleteMapping("/by-service")
+  public ResponseEntity<FileDeleteByServiceResponseDto> deleteByService(
+      @Valid @ModelAttribute FileDeleteByServiceRequestDto dto) throws IOException {
+    return ResponseEntity.ok(fileService.deleteByService(dto));
   }
 
   @GetMapping("/{fileId}/attach")
