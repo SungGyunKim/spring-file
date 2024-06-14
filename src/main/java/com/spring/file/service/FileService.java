@@ -141,9 +141,13 @@ public class FileService {
   @Transactional
   public FileDeleteByFileIdsResponseDto deleteByFileIds(FileDeleteByFileIdsRequestDto dto)
       throws IOException {
+    int deletedCount = 0;
     List<FileDto> fileDtoList = fileMapper.findByFileIds(dto.getFileIds());
-    int deletedCount = fileMapper.deleteByFileIds(dto.getFileIds());
-    deleteFile(fileDtoList);
+
+    if (!ObjectUtils.isEmpty(fileDtoList)) {
+      deletedCount = fileMapper.deleteByFileIds(dto.getFileIds());
+      deleteFile(fileDtoList);
+    }
 
     return FileDeleteByFileIdsResponseDto.builder()
         .count(deletedCount)
@@ -168,14 +172,19 @@ public class FileService {
   @Transactional
   public FileDeleteByServiceResponseDto deleteByService(FileDeleteByServiceRequestDto dto)
       throws IOException {
+    int deletedCount = 0;
+
     FileDto params = FileDto.builder()
         .serviceCode(dto.getServiceCode())
         .tableName(dto.getTableName())
         .distinguishColumnValue(dto.getDistinguishColumnValue())
         .build();
     List<FileDto> fileDtoList = fileMapper.findByService(params);
-    int deletedCount = fileMapper.deleteByService(params);
-    deleteFile(fileDtoList);
+
+    if (ObjectUtils.isEmpty(fileDtoList)) {
+      deletedCount = fileMapper.deleteByService(params);
+      deleteFile(fileDtoList);
+    }
 
     return FileDeleteByServiceResponseDto.builder()
         .count(deletedCount)
