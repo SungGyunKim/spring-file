@@ -19,10 +19,15 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.nio.file.attribute.FileTime;
+import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.StringJoiner;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -32,6 +37,7 @@ import org.apache.commons.io.FilenameUtils;
 import org.jasypt.encryption.pbe.StandardPBEByteEncryptor;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -240,9 +246,13 @@ public class FileService {
     for (FileDto fileDto : fileDtoList) {
       File file = FileUtils.getFile(fileDto.getFilePath(), fileDto.getFileId());
 
-      FileUtils.delete(file);
-      deleteDirectory(file.getParentFile());
+      deleteFile(file);
     }
+  }
+
+  private void deleteFile(File file) throws IOException {
+    FileUtils.delete(file);
+    deleteDirectory(file.getParentFile());
   }
 
   private void deleteDirectory(File directory) throws IOException {
@@ -250,8 +260,35 @@ public class FileService {
       FileUtils.deleteDirectory(directory);
 
       File parentDirectory = directory.getParentFile();
-      if (!parentDirectory.toPath().endsWith(fileProperties.getSavePath())) {
+      if (!parentDirectory.toPath().endsWith(fileProperties.getBasePath())) {
         deleteDirectory(parentDirectory);
+      }
+    }
+  }
+
+  @Scheduled(cron = "0 0 4 * * *")
+  public void deleteTempFile() throws IOException {
+    File tempDirectory = new File(fileProperties.getTempPath());
+    if (!tempDirectory.exists()) {
+      return;
+    }
+
+    Instant currentTime = Instant.now();
+
+    for (File serviceDirectory : Objects.requireNonNull(tempDirectory.listFiles())) {
+      if (!serviceDirectory.exists()) {
+        break;
+      }
+
+      for (File file : Objects.requireNonNull(serviceDirectory.listFiles())) {
+        BasicFileAttributes fileAttributes = Files.readAttributes(file.toPath(),
+            BasicFileAttributes.class);
+        FileTime creationTime = fileAttributes.creationTime();
+        Duration duration = Duration.between(creationTime.toInstant(), currentTime);
+
+        if (duration.toDays() > fileProperties.getTempFileMaxStorageDays()) {
+          deleteFile(file);
+        }
       }
     }
   }

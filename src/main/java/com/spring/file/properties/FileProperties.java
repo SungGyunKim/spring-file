@@ -1,6 +1,7 @@
 package com.spring.file.properties;
 
 import com.spring.file.util.DefaultUtils;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import java.io.File;
@@ -24,6 +25,9 @@ public class FileProperties {
   @NotBlank
   private final String tempFolder;
 
+  @Min(1)
+  private final Integer tempFileMaxStorageDays;
+
   @Size(min = 1)
   @NotBlank
   private final String saveFolder;
@@ -32,10 +36,12 @@ public class FileProperties {
   @NotBlank
   private final String encryptorPassword;
 
-  public FileProperties(String basePath, String tempFolder, String saveFolder,
+  public FileProperties(String basePath, String tempFolder, Integer tempFileMaxStorageDays,
+      String saveFolder,
       String encryptorPassword) {
     this.basePath = DefaultUtils.getValue(basePath, Paths.get("file").toAbsolutePath().toString());
     this.tempFolder = DefaultUtils.getValue(tempFolder, "temp");
+    this.tempFileMaxStorageDays = DefaultUtils.getValue(tempFileMaxStorageDays, 1);
     this.saveFolder = DefaultUtils.getValue(saveFolder, "save");
     this.encryptorPassword = DefaultUtils.getValue(encryptorPassword, "encryptorPassword");
   }
