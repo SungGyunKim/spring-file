@@ -13,6 +13,7 @@ import com.spring.file.model.FileUploadRequestDto;
 import com.spring.file.model.FileUploadResponseDto;
 import com.spring.file.service.FileService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -35,6 +36,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RequiredArgsConstructor
@@ -135,6 +137,27 @@ public class FileController {
     return ResponseEntity.status(HttpStatus.PARTIAL_CONTENT)
         .contentType(contentType)
         .body(resourceRegion);
+  }
+
+  @GetMapping("/{fileId}/resize")
+  public ResponseEntity<Resource> resize(@PathVariable @NotBlank @UUID String fileId,
+      @RequestParam @Min(0) int width, @RequestParam @Min(0) int height)
+      throws Exception {
+    FileDto fileDto = fileService.findByFileId(fileId);
+    String filename = fileDto.getFileNameExtension();
+    Resource resource = fileService.getResizeResource(fileDto, width, height);
+
+    MediaType contentType = MediaTypeFactory.getMediaType(filename)
+        .orElseThrow(() -> new Exception("미디어 타입을 확인할 수 없습니다."));
+    String contentDisposition = ContentDisposition.inline()
+        .filename(filename, StandardCharsets.UTF_8)
+        .build()
+        .toString();
+
+    return ResponseEntity.ok()
+        .contentType(contentType)
+        .header(HttpHeaders.CONTENT_DISPOSITION, contentDisposition)
+        .body(resource);
   }
 
 }

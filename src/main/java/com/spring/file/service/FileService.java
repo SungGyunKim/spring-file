@@ -14,6 +14,9 @@ import com.spring.file.model.FileUploadRequestDto;
 import com.spring.file.model.FileUploadResponseDto;
 import com.spring.file.model.FileUploadedDto;
 import com.spring.file.properties.FileProperties;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -30,10 +33,14 @@ import java.util.List;
 import java.util.Objects;
 import java.util.StringJoiner;
 import java.util.UUID;
+import javax.imageio.ImageIO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
+import org.imgscalr.Scalr;
+import org.imgscalr.Scalr.Method;
+import org.imgscalr.Scalr.Mode;
 import org.jasypt.encryption.pbe.StandardPBEByteEncryptor;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
@@ -223,6 +230,7 @@ public class FileService {
     String fileId = UUID.randomUUID().toString();
     byte[] encrypted = fileEncryptor.encrypt(multipartFile.getBytes());
     Path path = Paths.get(uploadPath, fileId);
+    Files.createDirectories(path.getParent());
     Files.write(path, encrypted);
 
     return fileId;
@@ -240,6 +248,26 @@ public class FileService {
     }
 
     return resource;
+  }
+
+  public Resource getResizeResource(FileDto fileDto, int resizeWidth, int resizeHeight)
+      throws Exception {
+    Path path = Paths.get(fileDto.getFilePath(), fileDto.getFileId());
+    byte[] decrypted = fileEncryptor.decrypt(Files.readAllBytes(path));
+    BufferedImage originalImage = ImageIO.read(new ByteArrayInputStream(decrypted));
+    Method scalingMethod = Method.AUTOMATIC;
+    // {@link Mode.AUTOMATIC} : width, height를 참고하여 가장 적합한 크기로 이미지를 resize한다.
+    // {@link Mode.FIT_EXACT} : width, height를 기준으로 이미지를 resize한다.
+    // {@link Mode.FIT_TO_WIDTH} : width를 기준으로 이미지를 resize한다.
+    // {@link Mode.FIT_TO_HEIGHT} : height를 기준으로 이미지를 resize한다.
+    Mode resizeMode = Mode.AUTOMATIC;
+    BufferedImage resizedImage = Scalr.resize(originalImage, scalingMethod, resizeMode, resizeWidth,
+        resizeHeight);
+
+    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    ImageIO.write(resizedImage, fileDto.getFileExtension(), baos);
+
+    return new ByteArrayResource(baos.toByteArray());
   }
 
   private void deleteFile(List<FileDto> fileDtoList) throws IOException {
