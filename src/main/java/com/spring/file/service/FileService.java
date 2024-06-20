@@ -88,17 +88,16 @@ public class FileService {
     String tempPath = getServiceTempPath(dto.getServiceCode());
     String savePath = getServiceSavePath(dto.getServiceCode());
 
-    List<FileDto> savedFileList = fileMapper.findByService(
-        FileDto.builder().
-            serviceCode(dto.getServiceCode())
-            .tableName(dto.getTableName())
-            .distinguishColumnValue(dto.getDistinguishColumnValue())
-            .build());
+    List<FileDto> savedFileList = fileMapper.findByService(FileDto.builder().
+        serviceCode(dto.getServiceCode())
+        .tableName(dto.getTableName())
+        .distinguishColumnValue(dto.getDistinguishColumnValue())
+        .build());
 
     // target
     List<FileDto> insertFileList = dto.getFiles().stream()
         .filter(file -> savedFileList.stream()
-            .noneMatch(savedFile -> savedFile.getFileId().equals(file.getFileId()))
+            .noneMatch(savedFile -> file.getFileId().equals(savedFile.getFileId()))
         )
         .map(file -> FileDto.builder()
             .fileId(file.getFileId())
@@ -137,7 +136,7 @@ public class FileService {
 
       FileUtils.moveFile(tempFile, saveFile);
     }
-    deleteFile(deleteFileList);
+    deleteFiles(deleteFileList);
 
     return FileSaveResponseDto.builder()
         .insertedList(insertFileList)
@@ -159,7 +158,7 @@ public class FileService {
 
     if (!ObjectUtils.isEmpty(fileDtoList)) {
       deletedCount = fileMapper.deleteByFileIds(dto.getFileIds());
-      deleteFile(fileDtoList);
+      deleteFiles(fileDtoList);
     }
 
     return FileDeleteByFileIdsResponseDto.builder()
@@ -196,7 +195,7 @@ public class FileService {
 
     if (ObjectUtils.isEmpty(fileDtoList)) {
       deletedCount = fileMapper.deleteByService(params);
-      deleteFile(fileDtoList);
+      deleteFiles(fileDtoList);
     }
 
     return FileDeleteByServiceResponseDto.builder()
@@ -270,7 +269,7 @@ public class FileService {
     return new ByteArrayResource(baos.toByteArray());
   }
 
-  private void deleteFile(List<FileDto> fileDtoList) throws IOException {
+  private void deleteFiles(List<FileDto> fileDtoList) throws IOException {
     for (FileDto fileDto : fileDtoList) {
       File file = FileUtils.getFile(fileDto.getFilePath(), fileDto.getFileId());
 
@@ -284,13 +283,15 @@ public class FileService {
   }
 
   private void deleteDirectory(File directory) throws IOException {
-    if (ObjectUtils.isEmpty(directory.list())) {
-      FileUtils.deleteDirectory(directory);
+    if (!ObjectUtils.isEmpty(directory.list())) {
+      return;
+    }
 
-      File parentDirectory = directory.getParentFile();
-      if (!parentDirectory.toPath().endsWith(fileProperties.getBasePath())) {
-        deleteDirectory(parentDirectory);
-      }
+    FileUtils.deleteDirectory(directory);
+
+    File parentDirectory = directory.getParentFile();
+    if (!parentDirectory.toPath().endsWith(fileProperties.getBasePath())) {
+      deleteDirectory(parentDirectory);
     }
   }
 
