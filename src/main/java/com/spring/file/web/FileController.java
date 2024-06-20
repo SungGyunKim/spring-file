@@ -1,5 +1,7 @@
 package com.spring.file.web;
 
+import com.spring.file.model.FileCopyRequestDto;
+import com.spring.file.model.FileCopyResponseDto;
 import com.spring.file.model.FileDeleteByFileIdsRequestDto;
 import com.spring.file.model.FileDeleteByFileIdsResponseDto;
 import com.spring.file.model.FileDeleteByServiceRequestDto;
@@ -74,6 +76,12 @@ public class FileController {
   public ResponseEntity<FileDeleteByServiceResponseDto> deleteByService(
       @Valid @ModelAttribute FileDeleteByServiceRequestDto dto) throws IOException {
     return ResponseEntity.ok(fileService.deleteByService(dto));
+  }
+
+  @PostMapping("/copy")
+  public ResponseEntity<FileCopyResponseDto> copy(
+      @Valid @ModelAttribute FileCopyRequestDto dto) throws IOException {
+    return ResponseEntity.ok(fileService.copy(dto));
   }
 
   @GetMapping("/{fileId}/attach")

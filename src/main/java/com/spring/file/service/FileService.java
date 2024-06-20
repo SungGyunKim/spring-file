@@ -1,6 +1,9 @@
 package com.spring.file.service;
 
 import com.spring.file.mapper.FileMapper;
+import com.spring.file.model.FileCopiedDto;
+import com.spring.file.model.FileCopyRequestDto;
+import com.spring.file.model.FileCopyResponseDto;
 import com.spring.file.model.FileDeleteByFileIdsRequestDto;
 import com.spring.file.model.FileDeleteByFileIdsResponseDto;
 import com.spring.file.model.FileDeleteByServiceRequestDto;
@@ -200,6 +203,36 @@ public class FileService {
 
     return FileDeleteByServiceResponseDto.builder()
         .count(deletedCount)
+        .build();
+  }
+
+  @Transactional
+  public FileCopyResponseDto copy(FileCopyRequestDto dto) throws IOException {
+    String tempPath = getServiceTempPath(dto.getServiceCode());
+    List<FileDto> savedFileList = fileMapper.findByService(FileDto.builder().
+        serviceCode(dto.getServiceCode())
+        .tableName(dto.getTableName())
+        .distinguishColumnValue(dto.getDistinguishColumnValue())
+        .build());
+
+    List<FileCopiedDto> copidFileList = new ArrayList<>();
+
+    for (FileDto savedFile : savedFileList) {
+      String fileId = UUID.randomUUID().toString();
+      File srcFile = new File(savedFile.getFilePath(), savedFile.getFileId());
+      File destFile = new File(tempPath, fileId);
+
+      FileUtils.copyFile(srcFile, destFile);
+      copidFileList.add(FileCopiedDto.builder()
+          .fileId(fileId)
+          .fileName(savedFile.getFileName())
+          .fileExtension(savedFile.getFileExtension())
+          .fileSize(savedFile.getFileSize())
+          .build());
+    }
+
+    return FileCopyResponseDto.builder()
+        .copiedList(copidFileList)
         .build();
   }
 
