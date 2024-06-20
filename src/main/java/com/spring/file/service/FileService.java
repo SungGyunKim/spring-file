@@ -218,7 +218,7 @@ public class FileService {
     List<FileCopiedDto> copidFileList = new ArrayList<>();
 
     for (FileDto savedFile : savedFileList) {
-      String fileId = UUID.randomUUID().toString();
+      String fileId = generateFileId();
       File srcFile = new File(savedFile.getFilePath(), savedFile.getFileId());
       File destFile = new File(tempPath, fileId);
 
@@ -259,7 +259,7 @@ public class FileService {
   }
 
   private String makeFile(String uploadPath, MultipartFile multipartFile) throws IOException {
-    String fileId = UUID.randomUUID().toString();
+    String fileId = generateFileId();
     byte[] encrypted = fileEncryptor.encrypt(multipartFile.getBytes());
     Path path = Paths.get(uploadPath, fileId);
     Files.createDirectories(path.getParent());
@@ -326,6 +326,10 @@ public class FileService {
     if (!parentDirectory.toPath().endsWith(fileProperties.getBasePath())) {
       deleteDirectory(parentDirectory);
     }
+  }
+
+  private String generateFileId() {
+    return UUID.randomUUID().toString();
   }
 
   @Scheduled(cron = "0 0 4 * * *")
