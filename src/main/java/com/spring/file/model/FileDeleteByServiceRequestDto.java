@@ -16,7 +16,7 @@ import lombok.ToString;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class FileDeleteByServiceRequestDto {
 
-  @Size(min = 1)
+  @Size(max = 10)
   @NotBlank
   String serviceCode;
 

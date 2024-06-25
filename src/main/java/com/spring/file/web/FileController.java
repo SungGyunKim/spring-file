@@ -1,7 +1,7 @@
 package com.spring.file.web;
 
-import com.spring.file.model.FileCopyRequestDto;
-import com.spring.file.model.FileCopyResponseDto;
+import com.spring.file.model.FileCopyByServiceRequestDto;
+import com.spring.file.model.FileCopyByServiceResponseDto;
 import com.spring.file.model.FileDeleteByFileIdsRequestDto;
 import com.spring.file.model.FileDeleteByFileIdsResponseDto;
 import com.spring.file.model.FileDeleteByServiceRequestDto;
@@ -60,16 +60,16 @@ public class FileController {
     return ResponseEntity.ok(fileService.save(requestDto));
   }
 
-  @DeleteMapping("/by-file-ids")
-  public ResponseEntity<FileDeleteByFileIdsResponseDto> deleteByFileIds(
-      @Valid @RequestBody FileDeleteByFileIdsRequestDto requestDto) throws IOException {
-    return ResponseEntity.ok(fileService.deleteByFileIds(requestDto));
-  }
-
   @GetMapping("/by-service")
   public ResponseEntity<FileFindByServiceResponseDto> findByService(
       @Valid @ModelAttribute FileFindByServiceRequestDto requestDto) {
     return ResponseEntity.ok(fileService.findByService(requestDto));
+  }
+
+  @DeleteMapping("/by-file-ids")
+  public ResponseEntity<FileDeleteByFileIdsResponseDto> deleteByFileIds(
+      @Valid @RequestBody FileDeleteByFileIdsRequestDto requestDto) throws IOException {
+    return ResponseEntity.ok(fileService.deleteByFileIds(requestDto));
   }
 
   @DeleteMapping("/by-service")
@@ -79,8 +79,8 @@ public class FileController {
   }
 
   @PostMapping("/copy/by-service")
-  public ResponseEntity<FileCopyResponseDto> copyByService(
-      @Valid @ModelAttribute FileCopyRequestDto requestDto) throws IOException {
+  public ResponseEntity<FileCopyByServiceResponseDto> copyByService(
+      @Valid @ModelAttribute FileCopyByServiceRequestDto requestDto) throws IOException {
     return ResponseEntity.ok(fileService.copyByService(requestDto));
   }
 

@@ -14,20 +14,18 @@ import lombok.ToString;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class FileCopyRequestDto {
+public class FileCopyByServiceRequestDto {
 
-  @Size(min = 1)
+  @Size(max = 10)
   @NotBlank
   String serviceCode;
 
-  @Size(min = 1)
-  @NotBlank
   @Size(max = 100)
+  @NotBlank
   String tableName;
 
-  @Size(min = 1)
-  @NotBlank
   @Size(max = 1000)
+  @NotBlank
   String distinguishColumnValue;
 
 }

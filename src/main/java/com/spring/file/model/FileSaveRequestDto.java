@@ -1,6 +1,7 @@
 package com.spring.file.model;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import java.util.List;
@@ -18,7 +19,7 @@ import lombok.ToString;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class FileSaveRequestDto {
 
-  @Size(min = 1)
+  @Size(max = 10)
   @NotBlank
   String serviceCode;
 
@@ -30,8 +31,7 @@ public class FileSaveRequestDto {
   @NotBlank
   String distinguishColumnValue;
 
-  @Size(min = 1)
-  @NotNull
-  List<FileSaveDto> files;
+  @NotEmpty
+  List<@NotNull FileSaveDto> files;
 
 }

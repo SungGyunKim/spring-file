@@ -2,8 +2,8 @@ package com.spring.file.service;
 
 import com.spring.file.mapper.FileMapper;
 import com.spring.file.model.FileCopiedDto;
-import com.spring.file.model.FileCopyRequestDto;
-import com.spring.file.model.FileCopyResponseDto;
+import com.spring.file.model.FileCopyByServiceRequestDto;
+import com.spring.file.model.FileCopyByServiceResponseDto;
 import com.spring.file.model.FileDeleteByFileIdsRequestDto;
 import com.spring.file.model.FileDeleteByFileIdsResponseDto;
 import com.spring.file.model.FileDeleteByServiceRequestDto;
@@ -193,7 +193,7 @@ public class FileService {
         .build();
     List<FileDto> fileDtoList = fileMapper.findByService(params);
 
-    if (ObjectUtils.isEmpty(fileDtoList)) {
+    if (!ObjectUtils.isEmpty(fileDtoList)) {
       deletedCount = fileMapper.deleteByService(params);
       deleteFiles(fileDtoList);
     }
@@ -204,7 +204,8 @@ public class FileService {
   }
 
   @Transactional
-  public FileCopyResponseDto copyByService(FileCopyRequestDto requestDto) throws IOException {
+  public FileCopyByServiceResponseDto copyByService(FileCopyByServiceRequestDto requestDto)
+      throws IOException {
     String tempPath = getServiceTempPath(requestDto.getServiceCode());
 
     FileDto params = FileDto.builder()
@@ -229,7 +230,7 @@ public class FileService {
           .build());
     }
 
-    return FileCopyResponseDto.builder()
+    return FileCopyByServiceResponseDto.builder()
         .copiedList(copidFileList)
         .build();
   }

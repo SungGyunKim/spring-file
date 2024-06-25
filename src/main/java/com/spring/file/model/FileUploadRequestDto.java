@@ -2,7 +2,9 @@ package com.spring.file.model;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import java.util.List;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -18,11 +20,11 @@ import org.springframework.web.multipart.MultipartFile;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class FileUploadRequestDto {
 
-  @Size(min = 1)
+  @Size(max = 10)
   @NotBlank
   String serviceCode;
 
   @NotEmpty
-  MultipartFile[] files;
+  List<@NotNull MultipartFile> files;
 
 }

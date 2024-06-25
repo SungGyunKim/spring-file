@@ -6,7 +6,7 @@ import lombok.Getter;
 
 @Getter
 @Builder
-public class FileCopyResponseDto {
+public class FileCopyByServiceResponseDto {
 
   private List<FileCopiedDto> copiedList;
 
