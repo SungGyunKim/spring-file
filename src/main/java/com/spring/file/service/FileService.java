@@ -21,6 +21,7 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -60,25 +61,20 @@ import org.springframework.web.multipart.MultipartFile;
 public class FileService {
 
   private final FileProperties fileProperties;
-
   private final StandardPBEByteEncryptor fileEncryptor;
-
   private final FileMapper fileMapper;
 
-  public FileUploadResponseDto upload(FileUploadRequestDto dto) throws Exception {
-    String tempPath = getServiceTempPath(dto.getServiceCode());
+  public FileUploadResponseDto upload(FileUploadRequestDto requestDto) throws Exception {
+    String tempPath = getServiceTempPath(requestDto.getServiceCode());
     List<FileUploadedDto> fileUploadedList = new ArrayList<>();
 
-    for (MultipartFile multipartFile : dto.getFiles()) {
-      String fileId = makeFile(tempPath, multipartFile);
-      FileUploadedDto fileUploaded = FileUploadedDto.builder()
-          .fileId(fileId)
+    for (MultipartFile multipartFile : requestDto.getFiles()) {
+      fileUploadedList.add(FileUploadedDto.builder()
+          .fileId(makeFile(tempPath, multipartFile))
           .fileName(FilenameUtils.removeExtension(multipartFile.getOriginalFilename()))
           .fileExtension(FilenameUtils.getExtension(multipartFile.getOriginalFilename()))
           .fileSize(multipartFile.getSize())
-          .build();
-
-      fileUploadedList.add(fileUploaded);
+          .build());
     }
 
     return FileUploadResponseDto.builder()
@@ -87,18 +83,19 @@ public class FileService {
   }
 
   @Transactional
-  public FileSaveResponseDto save(FileSaveRequestDto dto) throws IOException {
-    String tempPath = getServiceTempPath(dto.getServiceCode());
-    String savePath = getServiceSavePath(dto.getServiceCode());
+  public FileSaveResponseDto save(FileSaveRequestDto requestDto) throws IOException {
+    String tempPath = getServiceTempPath(requestDto.getServiceCode());
+    String savePath = getServiceSavePath(requestDto.getServiceCode());
 
-    List<FileDto> savedFileList = fileMapper.findByService(FileDto.builder().
-        serviceCode(dto.getServiceCode())
-        .tableName(dto.getTableName())
-        .distinguishColumnValue(dto.getDistinguishColumnValue())
-        .build());
+    FileDto params = FileDto.builder()
+        .serviceCode(requestDto.getServiceCode())
+        .tableName(requestDto.getTableName())
+        .distinguishColumnValue(requestDto.getDistinguishColumnValue())
+        .build();
+    List<FileDto> savedFileList = fileMapper.findByService(params);
 
     // target
-    List<FileDto> insertFileList = dto.getFiles().stream()
+    List<FileDto> insertFileList = requestDto.getFiles().stream()
         .filter(file -> savedFileList.stream()
             .noneMatch(savedFile -> file.getFileId().equals(savedFile.getFileId()))
         )
@@ -108,17 +105,17 @@ public class FileService {
             .fileName(file.getFileName())
             .fileExtension(file.getFileExtension())
             .fileSize(file.getFileSize())
-            .serviceCode(dto.getServiceCode())
-            .tableName(dto.getTableName())
-            .distinguishColumnValue(dto.getDistinguishColumnValue())
+            .serviceCode(requestDto.getServiceCode())
+            .tableName(requestDto.getTableName())
+            .distinguishColumnValue(requestDto.getDistinguishColumnValue())
             .build())
         .toList();
     List<FileDto> deleteFileList = savedFileList.stream()
-        .filter(savedFile -> dto.getFiles().stream()
+        .filter(savedFile -> requestDto.getFiles().stream()
             .noneMatch(file -> savedFile.getFileId().equals(file.getFileId()))
         ).toList();
     List<FileDto> maintainedList = savedFileList.stream()
-        .filter(savedFile -> dto.getFiles().stream()
+        .filter(savedFile -> requestDto.getFiles().stream()
             .anyMatch(file -> savedFile.getFileId().equals(file.getFileId()))
         ).toList();
 
@@ -154,13 +151,13 @@ public class FileService {
   }
 
   @Transactional
-  public FileDeleteByFileIdsResponseDto deleteByFileIds(FileDeleteByFileIdsRequestDto dto)
+  public FileDeleteByFileIdsResponseDto deleteByFileIds(FileDeleteByFileIdsRequestDto requestDto)
       throws IOException {
     int deletedCount = 0;
-    List<FileDto> fileDtoList = fileMapper.findByFileIds(dto.getFileIds());
+    List<FileDto> fileDtoList = fileMapper.findByFileIds(requestDto.getFileIds());
 
     if (!ObjectUtils.isEmpty(fileDtoList)) {
-      deletedCount = fileMapper.deleteByFileIds(dto.getFileIds());
+      deletedCount = fileMapper.deleteByFileIds(requestDto.getFileIds());
       deleteFiles(fileDtoList);
     }
 
@@ -171,11 +168,11 @@ public class FileService {
 
 
   @Transactional(readOnly = true, propagation = Propagation.SUPPORTS)
-  public FileFindByServiceResponseDto findByService(FileFindByServiceRequestDto dto) {
+  public FileFindByServiceResponseDto findByService(FileFindByServiceRequestDto requestDto) {
     FileDto params = FileDto.builder()
-        .serviceCode(dto.getServiceCode())
-        .tableName(dto.getTableName())
-        .distinguishColumnValue(dto.getDistinguishColumnValue())
+        .serviceCode(requestDto.getServiceCode())
+        .tableName(requestDto.getTableName())
+        .distinguishColumnValue(requestDto.getDistinguishColumnValue())
         .build();
     List<FileDto> result = fileMapper.findByService(params);
 
@@ -185,14 +182,14 @@ public class FileService {
   }
 
   @Transactional
-  public FileDeleteByServiceResponseDto deleteByService(FileDeleteByServiceRequestDto dto)
+  public FileDeleteByServiceResponseDto deleteByService(FileDeleteByServiceRequestDto requestDto)
       throws IOException {
     int deletedCount = 0;
 
     FileDto params = FileDto.builder()
-        .serviceCode(dto.getServiceCode())
-        .tableName(dto.getTableName())
-        .distinguishColumnValue(dto.getDistinguishColumnValue())
+        .serviceCode(requestDto.getServiceCode())
+        .tableName(requestDto.getTableName())
+        .distinguishColumnValue(requestDto.getDistinguishColumnValue())
         .build();
     List<FileDto> fileDtoList = fileMapper.findByService(params);
 
@@ -207,18 +204,19 @@ public class FileService {
   }
 
   @Transactional
-  public FileCopyResponseDto copy(FileCopyRequestDto dto) throws IOException {
-    String tempPath = getServiceTempPath(dto.getServiceCode());
-    List<FileDto> savedFileList = fileMapper.findByService(FileDto.builder().
-        serviceCode(dto.getServiceCode())
-        .tableName(dto.getTableName())
-        .distinguishColumnValue(dto.getDistinguishColumnValue())
-        .build());
+  public FileCopyResponseDto copyByService(FileCopyRequestDto requestDto) throws IOException {
+    String tempPath = getServiceTempPath(requestDto.getServiceCode());
+
+    FileDto params = FileDto.builder()
+        .serviceCode(requestDto.getServiceCode())
+        .tableName(requestDto.getTableName())
+        .distinguishColumnValue(requestDto.getDistinguishColumnValue())
+        .build();
+    List<FileDto> savedFileList = fileMapper.findByService(params);
 
     List<FileCopiedDto> copidFileList = new ArrayList<>();
-
     for (FileDto savedFile : savedFileList) {
-      String fileId = generateFileId();
+      String fileId = getNewFileId();
       File srcFile = new File(savedFile.getFilePath(), savedFile.getFileId());
       File destFile = new File(tempPath, fileId);
 
@@ -259,7 +257,7 @@ public class FileService {
   }
 
   private String makeFile(String uploadPath, MultipartFile multipartFile) throws IOException {
-    String fileId = generateFileId();
+    String fileId = getNewFileId();
     byte[] encrypted = fileEncryptor.encrypt(multipartFile.getBytes());
     Path path = Paths.get(uploadPath, fileId);
     Files.createDirectories(path.getParent());
@@ -268,13 +266,17 @@ public class FileService {
     return fileId;
   }
 
+  private String getNewFileId() {
+    return UUID.randomUUID().toString();
+  }
+
   public Resource getResource(FileDto fileDto) throws Exception {
     Path path = Paths.get(fileDto.getFilePath(), fileDto.getFileId());
     byte[] decrypted = fileEncryptor.decrypt(Files.readAllBytes(path));
     Resource resource = new ByteArrayResource(decrypted);
 
     if (!resource.exists()) {
-      throw new Exception("파일이 존재하지 않습니다.");
+      throw new FileNotFoundException();
     } else if (!resource.isReadable()) {
       throw new Exception("파일을 읽을 수 없습니다.");
     }
@@ -326,10 +328,6 @@ public class FileService {
     if (!parentDirectory.toPath().endsWith(fileProperties.getBasePath())) {
       deleteDirectory(parentDirectory);
     }
-  }
-
-  private String generateFileId() {
-    return UUID.randomUUID().toString();
   }
 
   @Scheduled(cron = "0 0 4 * * *")

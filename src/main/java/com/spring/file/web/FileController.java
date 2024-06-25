@@ -49,39 +49,39 @@ public class FileController {
   private final FileService fileService;
 
   @PostMapping("/upload")
-  public ResponseEntity<FileUploadResponseDto> upload(@Valid FileUploadRequestDto dto)
+  public ResponseEntity<FileUploadResponseDto> upload(@Valid FileUploadRequestDto requestDto)
       throws Exception {
-    return ResponseEntity.ok(fileService.upload(dto));
+    return ResponseEntity.ok(fileService.upload(requestDto));
   }
 
   @PostMapping("/save")
-  public ResponseEntity<FileSaveResponseDto> save(@Valid @RequestBody FileSaveRequestDto dto)
+  public ResponseEntity<FileSaveResponseDto> save(@Valid @RequestBody FileSaveRequestDto requestDto)
       throws IOException {
-    return ResponseEntity.ok(fileService.save(dto));
+    return ResponseEntity.ok(fileService.save(requestDto));
   }
 
   @DeleteMapping("/by-file-ids")
   public ResponseEntity<FileDeleteByFileIdsResponseDto> deleteByFileIds(
-      @Valid @RequestBody FileDeleteByFileIdsRequestDto dto) throws IOException {
-    return ResponseEntity.ok(fileService.deleteByFileIds(dto));
+      @Valid @RequestBody FileDeleteByFileIdsRequestDto requestDto) throws IOException {
+    return ResponseEntity.ok(fileService.deleteByFileIds(requestDto));
   }
 
   @GetMapping("/by-service")
   public ResponseEntity<FileFindByServiceResponseDto> findByService(
-      @Valid @ModelAttribute FileFindByServiceRequestDto dto) {
-    return ResponseEntity.ok(fileService.findByService(dto));
+      @Valid @ModelAttribute FileFindByServiceRequestDto requestDto) {
+    return ResponseEntity.ok(fileService.findByService(requestDto));
   }
 
   @DeleteMapping("/by-service")
   public ResponseEntity<FileDeleteByServiceResponseDto> deleteByService(
-      @Valid @ModelAttribute FileDeleteByServiceRequestDto dto) throws IOException {
-    return ResponseEntity.ok(fileService.deleteByService(dto));
+      @Valid @ModelAttribute FileDeleteByServiceRequestDto requestDto) throws IOException {
+    return ResponseEntity.ok(fileService.deleteByService(requestDto));
   }
 
-  @PostMapping("/copy")
-  public ResponseEntity<FileCopyResponseDto> copy(
-      @Valid @ModelAttribute FileCopyRequestDto dto) throws IOException {
-    return ResponseEntity.ok(fileService.copy(dto));
+  @PostMapping("/copy/by-service")
+  public ResponseEntity<FileCopyResponseDto> copyByService(
+      @Valid @ModelAttribute FileCopyRequestDto requestDto) throws IOException {
+    return ResponseEntity.ok(fileService.copyByService(requestDto));
   }
 
   @GetMapping("/{fileId}/attach")
@@ -111,7 +111,7 @@ public class FileController {
     Resource resource = fileService.getResource(fileDto);
 
     MediaType contentType = MediaTypeFactory.getMediaType(filename)
-        .orElseThrow(() -> new Exception("미디어 타입을 확인할 수 없습니다."));
+        .orElseThrow();
     String contentDisposition = ContentDisposition.inline()
         .filename(filename, StandardCharsets.UTF_8)
         .build()
@@ -130,7 +130,7 @@ public class FileController {
     String filename = fileDto.getFileNameExtension();
     Resource resource = fileService.getResource(fileDto);
 
-    long chunkSize = 1024 * 1024;
+    int chunkSize = 1024 * 1024;
     HttpRange httpRange = httpHeaders.getRange().stream()
         .findFirst()
         .orElse(HttpRange.createByteRange(0, resource.contentLength() - 1));
@@ -156,7 +156,7 @@ public class FileController {
     Resource resource = fileService.getResizeResource(fileDto, width, height);
 
     MediaType contentType = MediaTypeFactory.getMediaType(filename)
-        .orElseThrow(() -> new Exception("미디어 타입을 확인할 수 없습니다."));
+        .orElseThrow();
     String contentDisposition = ContentDisposition.inline()
         .filename(filename, StandardCharsets.UTF_8)
         .build()
